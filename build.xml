@@ -1,0 +1,39 @@
+<project default="build">
+    <target name="buildutil" description="Build the util files used for instrumentation">
+        <mkdir dir="out/util"/>
+        <javac includeantruntime="false" srcdir="util" destdir="out/util" debug="on">
+        </javac>
+    </target>
+
+    <target name="jarutil" depends="buildutil"
+            description="generate util.jar">
+        <jar jarfile="src/main/resource/util.jar" basedir="out/util">
+        </jar>
+    </target>
+
+    <target name="build">
+        <mkdir dir="out/production"/>
+        <javac includeantruntime="false" srcdir="src/main/java" destdir="out/production" debug="on">
+            <classpath>
+                <pathelement location="lib/sootclasses-trunk-jar-with-dependencies.jar"/>
+                <pathelement location="lib/picocli-2.0.1.jar"/>
+            </classpath>
+        </javac>
+    </target>
+
+    <target name="jar" depends="build,jarutil"
+            description="generate the distribution">
+        <jar jarfile="CostInstrument.jar" basedir="out/production">
+            <zipgroupfileset dir="lib" includes="*.jar"/>
+            <fileset file="src/main/resource/util.jar"/>
+            <manifest>
+                <attribute name="Main-Class" value="edu.utexas.stac.CostInstrument"/>
+            </manifest>
+        </jar>
+    </target>
+
+    <target name="clean">
+        <delete dir="out"/>
+        <delete file="CostInstrument.jar"/>
+    </target>
+</project>
