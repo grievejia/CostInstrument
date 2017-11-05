@@ -8,5 +8,5 @@ Cost instrumenter for jar files
 
 ## Usage
 ```
-java -jar CostInstrument.jar <jars to process> -o <output jar>
+java -jar CostInstrument.jar -o <output jar> <jars to process>
 ```

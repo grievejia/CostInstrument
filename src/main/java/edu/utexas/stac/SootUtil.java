@@ -27,10 +27,6 @@ import java.util.zip.ZipEntry;
 
 public class SootUtil {
 
-    private static final String INSTRUMENT_CLASS_NAME = "edu.utexas.stac.Cost";
-    private static final String INC_METHOD_SIGNATURE = "<edu.utexas.stac.Cost: void inc()>";
-    private static final String GET_METHOD_SIGNATURE = "<edu.utexas.stac.Cost: long get()>";
-
     private static Logger logger = Logger.getLogger(SootUtil.class.getName());
 
     private static void loadClasses() {
@@ -53,44 +49,9 @@ public class SootUtil {
         sootOptions.set_process_dir(cliOption.getInputFiles());
     }
 
-    private static void setLogLevel(CliOption.LogLevel logLevel) {
-        switch (logLevel) {
-            case SILENT:
-                logger.setLevel(Level.OFF);
-                break;
-            case DEFAULT:
-                logger.setLevel(Level.INFO);
-                break;
-            case VERBOSE:
-                logger.setLevel(Level.ALL);
-                break;
-        }
-    }
-
     public static void initialize(CliOption cliOption) {
-        setLogLevel(cliOption.getLogLevel());
         setOptions(cliOption);
         loadClasses();
-    }
-
-    public static void instrumentJar(String jarFile) {
-        logger.info("Processing " + jarFile);
-        for (String cl : SourceLocator.v().getClassesUnder(jarFile)) {
-            SootClass clazz = Scene.v().getSootClass(cl);
-            boolean isInstrumentClass = clazz.getName().startsWith(INSTRUMENT_CLASS_NAME);
-
-            for (SootMethod method: clazz.getMethods()) {
-                if (method.isAbstract() || method.isNative())
-                    continue;
-                if (isInstrumentClass) {
-                    // We still need to retrieve the active body since Soot won't serialize the body otherwise
-                    method.retrieveActiveBody();
-                } else {
-                    instrumentMethod(method);
-                }
-            }
-        }
-        logger.info("Finished instrumenting " + jarFile);
     }
 
     private static File getOutputFile(CliOption cliOption) throws IOException {
@@ -157,75 +118,5 @@ public class SootUtil {
         } catch (IOException e) {
             logger.severe("I/O exception occurred while writing jar file: " + e.getMessage());
         }
-    }
-
-    private static SootMethodRef getInstrumentMethodRef() {
-        SootMethod method = Scene.v().getMethod(INC_METHOD_SIGNATURE);
-        if (method == null)
-            throw new RuntimeException("Cannot find method Cost.inc()");
-        return method.makeRef();
-    }
-
-    private static InvokeStmt getInstrumentMethodInvokeStmt() {
-        InvokeExpr invokeExpr = Jimple.v().newStaticInvokeExpr(getInstrumentMethodRef(), Collections.emptyList());
-        return Jimple.v().newInvokeStmt(invokeExpr);
-    }
-
-    private static SootMethodRef getCostMethodRef() {
-        SootMethod method = Scene.v().getMethod(GET_METHOD_SIGNATURE);
-        if (method == null)
-            throw new RuntimeException("Cannot find method Cost.get()");
-        return method.makeRef();
-    }
-
-    private static InvokeStmt getCostMethodInvokeStmt() {
-        InvokeExpr invokeExpr = Jimple.v().newStaticInvokeExpr(getCostMethodRef(), Collections.emptyList());
-        return Jimple.v().newInvokeStmt(invokeExpr);
-    }
-
-    private static void instrumentMethodEntry(Body body) {
-        PatchingChain<Unit> units = body.getUnits();
-        Unit firstInstrumentPoint = units.getFirst();
-        while (firstInstrumentPoint != null && firstInstrumentPoint instanceof IdentityUnit) {
-            firstInstrumentPoint = units.getSuccOf(firstInstrumentPoint);
-        }
-        if (firstInstrumentPoint != null)
-            units.insertBefore(getInstrumentMethodInvokeStmt(), firstInstrumentPoint);
-    }
-
-    private static Set<Loop> findAllLoops(Body body) {
-        LoopNestTree loopNestTree = new LoopNestTree(body);
-        logger.fine("Found " + loopNestTree.size() + "loops");
-        logger.fine("Has nested loops = " + loopNestTree.hasNestedLoops());
-        return loopNestTree;
-    }
-
-    private static void instrumentLoop(Body body, Loop loop) {
-        PatchingChain<Unit> units = body.getUnits();
-        units.insertAfter(getInstrumentMethodInvokeStmt(), loop.getHead());
-    }
-
-    private static void instrumentLoops(Body body) {
-        Set<Loop> loops = findAllLoops(body);
-        for (Loop loop: loops)
-            instrumentLoop(body, loop);
-    }
-
-    private static void instrumentMethod(SootMethod method) {
-        logger.fine("Processing method " + method.getSignature());
-        Body body = method.retrieveActiveBody();
-        logger.fine("Active body for " + method.getSignature() + " retrieved");
-
-        // Don't bother instrumenting empty method
-        if (body.getUnits().isEmpty())
-            return;
-
-        instrumentMethodEntry(body);
-        logger.fine("Method body instrumented");
-        instrumentLoops(body);
-        logger.fine("Loop bodies instrumented");
-
-        // Hope that we did not mess up the Jimple
-        body.validate();
     }
 }

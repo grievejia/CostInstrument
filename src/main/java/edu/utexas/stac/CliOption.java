@@ -9,6 +9,7 @@ import java.util.List;
 public class CliOption {
 
     public enum LogLevel {
+        ALL,
         VERBOSE,
         DEFAULT,
         SILENT
@@ -17,7 +18,8 @@ public class CliOption {
     @CommandLine.Parameters(arity = "1..*", paramLabel = "FILE", description = "Jar file(s) to process.")
     private ArrayList<String> inputFiles;
 
-    @CommandLine.Option(names = { "-l", "--log-level" }, description = "Specify the log level")
+    @CommandLine.Option(names = { "-l", "--log-level" }, description = "Specify the log level: SILENT, DEFAULT, " +
+            "VERBOSE, or ALL")
     private LogLevel logLevel = LogLevel.DEFAULT;
 
     @CommandLine.Option(names = { "--output-java-version" }, description = "Specify the Java version of the output " +

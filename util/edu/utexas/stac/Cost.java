@@ -16,5 +16,9 @@ public class Cost {
         ++value;
     }
 
+    public static void inc(int c) {
+        value += c;
+    }
+
     public long get() { return value; }
 }
