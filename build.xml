@@ -35,5 +35,6 @@
     <target name="clean">
         <delete dir="out"/>
         <delete file="CostInstrument.jar"/>
+        <delete file="src/main/resource/util.jar"/>
     </target>
 </project>

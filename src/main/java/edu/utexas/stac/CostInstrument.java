@@ -7,6 +7,8 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.jar.JarFile;
+import java.util.jar.Manifest;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -53,6 +55,7 @@ public class CostInstrument {
     }
 
     public static void main(String args[]) {
+        // Read cmdline options
         CliOption cliOption = new CliOption();
         try {
             cliOption = CommandLine.populateCommand(cliOption, args);
@@ -67,17 +70,30 @@ public class CostInstrument {
         }
         cliOption.validate();
 
+        // Initialize logging facilities
         initLogger(cliOption.getLogLevel());
 
         // Extract utility jar file
         String utilJar = extractUtilJar();
         cliOption.appendInputFile(utilJar);
 
+        // Instrumentation work starts here
         SootUtil.initialize(cliOption);
         SootJarFileInstrumenter jarFileInstrumenter = new SootJarFileInstrumenter(new SootClassInstrumenter(new
                 LightWeightMethodInstrumenter()));
         for (String jarFile: cliOption.getInputFiles())
             jarFileInstrumenter.instrumentJarFile(jarFile);
-        SootUtil.writeJar(cliOption);
+
+        // Dump the result to the output jar
+        Manifest outputManifest = null;
+        try {
+            outputManifest= new JarFile(cliOption.getInputFiles().get(0))
+                    .getManifest();
+        } catch (IOException e) {
+            // Try to carry on the work without the manifest
+        }
+        JarWriter jarWriter = new JarWriter(cliOption.getOutputFile(),
+                cliOption.getOutputJavaVersion(), outputManifest);
+        jarWriter.writeJars(cliOption.getInputFiles());
     }
 }

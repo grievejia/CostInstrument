@@ -54,7 +54,7 @@ public class LightWeightMethodInstrumenter implements SootMethodInstrumenter {
 
     private static Set<Loop> findAllLoops(Body body) {
         LoopNestTree loopNestTree = new LoopNestTree(body);
-        logger.finer("Found " + loopNestTree.size() + "loops");
+        logger.finer("Found " + loopNestTree.size() + " loops");
         logger.finer("Has nested loops = " + loopNestTree.hasNestedLoops());
         return loopNestTree;
     }
