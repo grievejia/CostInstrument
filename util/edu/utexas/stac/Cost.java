@@ -12,6 +12,8 @@ public class Cost {
         });
     }
 
+    public long v() { return value; }
+
     public static void inc() {
         ++value;
     }
