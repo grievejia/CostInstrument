@@ -20,12 +20,9 @@ public class Cost {
         value += c;
     }
 
-    public long read() { return value; }
-    public void write(long v) { value = v; }
+    public static long read() { return value; }
 
-//    public static long read() { return value; }
-//
-//    public static void reset() { write(0); }
-//
-//    public static void write(long v) { value = v; }
+    public static void reset() { write(0); }
+
+    public static void write(long v) { value = v; }
 }
