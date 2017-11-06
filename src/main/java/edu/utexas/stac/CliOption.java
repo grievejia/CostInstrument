@@ -12,6 +12,10 @@ public class CliOption {
         ALL, VERBOSE, DEFAULT, SILENT
     }
 
+    public enum Strategy {
+        LIGHT, HEAVY
+    }
+
     @CommandLine.Parameters(arity = "1..*", paramLabel = "FILE", description
             = "Jar file(s) to process.")
     private ArrayList<String> inputFiles;
@@ -24,6 +28,14 @@ public class CliOption {
             "Specify the Java version of the output " + "file. Valid range is" +
                     " from 1 to 8, and 0 means the default")
     private int outputJavaVersion = 0;
+
+    @CommandLine.Option(names = {"-s", "--strategy"}, description = "Specify " +
+            "the instrumentation strategy. The LIGHT strategy only increase " +
+            "the cost by 1 for each method entry and loop header. The HEAVY " +
+            "strategy will count the number of Soot instructions for each " +
+            "basic block and increase the cost by that number at the end of " +
+            "each block. Default to LIGHT")
+    private Strategy strategy = Strategy.LIGHT;
 
     @CommandLine.Option(names = {"-h", "--help"}, usageHelp = true,
             description = "Displays this help message and quits.")
@@ -49,6 +61,10 @@ public class CliOption {
 
     public int getOutputJavaVersion() {
         return outputJavaVersion;
+    }
+
+    public Strategy getStrategy() {
+        return strategy;
     }
 
     public boolean isHelpRequested() {

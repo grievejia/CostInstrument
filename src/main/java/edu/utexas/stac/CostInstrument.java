@@ -19,19 +19,20 @@ public class CostInstrument {
             Path utilJarPath = Files.createTempFile("util", ".jar");
             utilJarPath.toFile().deleteOnExit();
 
-            InputStream link = ClassLoader.getSystemResourceAsStream("util.jar");
+            InputStream link = ClassLoader.getSystemResourceAsStream("util" +
+                    ".jar");
             Files.copy(link, utilJarPath, StandardCopyOption.REPLACE_EXISTING);
             return utilJarPath.toString();
         } catch (IOException e) {
-            System.err.println("Error when extracting util.jar: " + e.getMessage());
+            System.err.println("Error when extracting util.jar: " + e
+                    .getMessage());
             System.exit(-1);
         }
         throw new RuntimeException("Should not reach here");
     }
 
     private static void initLogger(CliOption.LogLevel logLevel) {
-        System.setProperty(
-                "java.util.logging.SimpleFormatter.format",
+        System.setProperty("java.util.logging.SimpleFormatter.format",
                 "[%1$tF %1$tT] [%4$7s] %5$s%6$s%n");
         Logger rootLogger = Logger.getLogger("");
         switch (logLevel) {
@@ -51,6 +52,16 @@ public class CostInstrument {
                 rootLogger.setLevel(Level.ALL);
                 rootLogger.getHandlers()[0].setLevel(Level.ALL);
                 break;
+        }
+    }
+
+    private static SootMethodInstrumenter getMethodInstrumenter(CliOption
+                                                                        .Strategy strategy) {
+        switch (strategy) {
+            case HEAVY:
+                return new HeavyWeightMethodInstrumenter();
+            default:
+                return new LightWeightMethodInstrumenter();
         }
     }
 
@@ -79,15 +90,18 @@ public class CostInstrument {
 
         // Instrumentation work starts here
         SootUtil.initialize(cliOption);
-        SootJarFileInstrumenter jarFileInstrumenter = new SootJarFileInstrumenter(new SootClassInstrumenter(new
-                LightWeightMethodInstrumenter()));
-        for (String jarFile: cliOption.getInputFiles())
+        SootMethodInstrumenter methodInstrumenter = getMethodInstrumenter
+                (cliOption.getStrategy());
+        SootJarFileInstrumenter jarFileInstrumenter = new
+                SootJarFileInstrumenter(new SootClassInstrumenter
+                (methodInstrumenter));
+        for (String jarFile : cliOption.getInputFiles())
             jarFileInstrumenter.instrumentJarFile(jarFile);
 
         // Dump the result to the output jar
         Manifest outputManifest = null;
         try {
-            outputManifest= new JarFile(cliOption.getInputFiles().get(0))
+            outputManifest = new JarFile(cliOption.getInputFiles().get(0))
                     .getManifest();
         } catch (IOException e) {
             // Try to carry on the work without the manifest
