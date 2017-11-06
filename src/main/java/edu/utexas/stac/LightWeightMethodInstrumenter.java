@@ -14,7 +14,7 @@ import java.util.logging.Logger;
 public class LightWeightMethodInstrumenter implements SootMethodInstrumenter {
 
     private static final String INC_METHOD_SIGNATURE = "<edu.utexas.stac.Cost: void inc()>";
-    private static final String GET_METHOD_SIGNATURE = "<edu.utexas.stac.Cost: long get()>";
+    private static final String GET_METHOD_SIGNATURE = "<edu.utexas.stac.Cost: long read()>";
 
     private static Logger logger = Logger.getLogger(LightWeightMethodInstrumenter.class.getName());
 
@@ -33,7 +33,7 @@ public class LightWeightMethodInstrumenter implements SootMethodInstrumenter {
     private static SootMethodRef getCostMethodRef() {
         SootMethod method = Scene.v().getMethod(GET_METHOD_SIGNATURE);
         if (method == null)
-            throw new RuntimeException("Cannot find method Cost.get()");
+            throw new RuntimeException("Cannot find method Cost.read()");
         return method.makeRef();
     }
 

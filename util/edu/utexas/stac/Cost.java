@@ -12,8 +12,6 @@ public class Cost {
         });
     }
 
-    public long v() { return value; }
-
     public static void inc() {
         ++value;
     }
@@ -22,9 +20,9 @@ public class Cost {
         value += c;
     }
 
-    public static long get() { return value; }
+    public static long read() { return value; }
 
-    public static void reset() { set(0); }
+    public static void reset() { write(0); }
 
-    public static void set(long v) { value = v; }
+    public static void write(long v) { value = v; }
 }
