@@ -24,5 +24,5 @@ public class Cost {
 
     public static void reset() { set(0); }
 
-    public static void set(long value) { this.value = value; }
+    public static void set(long v) { value = v; }
 }
