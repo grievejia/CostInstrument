@@ -12,5 +12,5 @@ out/
 workDir/
 
 # Artifacts
-src/main/resource/util.jar
+src/main/resource/cost.jar
 CostInstrument.jar

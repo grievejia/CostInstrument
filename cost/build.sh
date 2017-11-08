@@ -3,5 +3,5 @@
 set -e
 
 javac `find . -name *.java`
-jar cf util.jar `find . -name *.class`
+jar cf cost.jar `find . -name *.class`
 rm `find . -name *.class`

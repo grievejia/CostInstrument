@@ -21,12 +21,12 @@ public class CliOption {
     private ArrayList<String> inputFiles;
 
     @CommandLine.Option(names = {"-l", "--log-level"}, description = "Specify" +
-            " the log level: SILENT, DEFAULT, " + "VERBOSE, or ALL")
+            " the log level: SILENT, DEFAULT, " + "VERBOSE, or ALL.")
     private LogLevel logLevel = LogLevel.DEFAULT;
 
-    @CommandLine.Option(names = {"--output-java-version"}, description =
+    @CommandLine.Option(names = {"-j", "--output-java-version"}, description =
             "Specify the Java version of the output " + "file. Valid range is" +
-                    " from 1 to 8, and 0 means the default")
+                    " from 0 to 8, where 0 means the default.")
     private int outputJavaVersion = 0;
 
     @CommandLine.Option(names = {"-s", "--strategy"}, description = "Specify " +
@@ -34,8 +34,16 @@ public class CliOption {
             "the cost by 1 for each method entry and loop header. The HEAVY " +
             "strategy will count the number of Soot instructions for each " +
             "basic block and increase the cost by that number at the end of " +
-            "each block. Default to LIGHT")
+            "each block. Default to LIGHT.")
     private Strategy strategy = Strategy.LIGHT;
+
+    @CommandLine.Option(names = {"-e", "--extract-cost-jar"}, description = "Extract cost.jar to the path specified " +
+            "in --output, and quit immediately. No instrumentation is performed.")
+    private boolean extractCostJar = false;
+
+    @CommandLine.Option(names = {"-x", "--exclude-cost-in-output"}, description = "Prevent cost.jar from getting " +
+            "included in the output jar.")
+    private boolean excludeCostJar = false;
 
     @CommandLine.Option(names = {"-h", "--help"}, usageHelp = true,
             description = "Displays this help message and quits.")
@@ -51,10 +59,6 @@ public class CliOption {
         return Collections.unmodifiableList(inputFiles);
     }
 
-    void appendInputFile(String file) {
-        inputFiles.add(file);
-    }
-
     public LogLevel getLogLevel() {
         return logLevel;
     }
@@ -65,6 +69,14 @@ public class CliOption {
 
     public Strategy getStrategy() {
         return strategy;
+    }
+
+    public boolean isExcludeCostJar() {
+        return excludeCostJar;
+    }
+
+    public boolean isExtractCostJar() {
+        return extractCostJar;
     }
 
     public boolean isHelpRequested() {

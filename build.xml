@@ -1,13 +1,13 @@
 <project default="build">
     <target name="buildutil" description="Build the util files used for instrumentation">
-        <mkdir dir="out/util"/>
-        <javac includeantruntime="false" srcdir="util" destdir="out/util" debug="on">
+        <mkdir dir="out/cost"/>
+        <javac includeantruntime="false" srcdir="cost" destdir="out/cost" debug="on">
         </javac>
     </target>
 
     <target name="jarutil" depends="buildutil"
-            description="generate util.jar">
-        <jar jarfile="src/main/resource/util.jar" basedir="out/util">
+            description="generate cost.jar">
+        <jar jarfile="src/main/resource/cost.jar" basedir="out/cost">
         </jar>
     </target>
 
@@ -25,7 +25,7 @@
             description="generate the distribution">
         <jar jarfile="CostInstrument.jar" basedir="out/production">
             <zipgroupfileset dir="lib" includes="*.jar"/>
-            <fileset file="src/main/resource/util.jar"/>
+            <fileset file="src/main/resource/cost.jar"/>
             <manifest>
                 <attribute name="Main-Class" value="edu.utexas.stac.CostInstrument"/>
             </manifest>
@@ -35,6 +35,6 @@
     <target name="clean">
         <delete dir="out"/>
         <delete file="CostInstrument.jar"/>
-        <delete file="src/main/resource/util.jar"/>
+        <delete file="src/main/resource/cost.jar"/>
     </target>
 </project>

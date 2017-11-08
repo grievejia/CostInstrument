@@ -6,7 +6,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.List;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 import java.util.logging.Level;
@@ -14,21 +16,31 @@ import java.util.logging.Logger;
 
 public class CostInstrument {
 
-    private static String extractUtilJar() {
+    private static String extractCostJar(Path dstPath) {
         try {
-            Path utilJarPath = Files.createTempFile("util", ".jar");
-            utilJarPath.toFile().deleteOnExit();
-
-            InputStream link = ClassLoader.getSystemResourceAsStream("util" +
+            InputStream link = ClassLoader.getSystemResourceAsStream("cost" +
                     ".jar");
-            Files.copy(link, utilJarPath, StandardCopyOption.REPLACE_EXISTING);
-            return utilJarPath.toString();
+            Files.copy(link, dstPath, StandardCopyOption.REPLACE_EXISTING);
+            return dstPath.toString();
         } catch (IOException e) {
-            System.err.println("Error when extracting util.jar: " + e
+            System.err.println("Error when extracting cost.jar: " + e
                     .getMessage());
             System.exit(-1);
         }
         throw new RuntimeException("Should not reach here");
+    }
+
+    private static String extractCostJarToTempdir() {
+        Path costJarPath = null;
+        try {
+            costJarPath = Files.createTempFile("cost", ".jar");
+            costJarPath.toFile().deleteOnExit();
+        } catch (IOException e) {
+            System.err.println("Error when creating temporary jar file: " + e
+                    .getMessage());
+            System.exit(-1);
+        }
+        return extractCostJar(costJarPath);
     }
 
     private static void initLogger(CliOption.LogLevel logLevel) {
@@ -84,12 +96,15 @@ public class CostInstrument {
         // Initialize logging facilities
         initLogger(cliOption.getLogLevel());
 
-        // Extract utility jar file
-        String utilJar = extractUtilJar();
-        cliOption.appendInputFile(utilJar);
+        // Extract cost.jar file
+        if (cliOption.isExtractCostJar()) {
+            extractCostJar(Paths.get(cliOption.getOutputFile()));
+            System.exit(0);
+        }
+        String costJar = extractCostJarToTempdir();
 
         // Instrumentation work starts here
-        SootUtil.initialize(cliOption);
+        SootUtil.initialize(cliOption, costJar);
         SootMethodInstrumenter methodInstrumenter = getMethodInstrumenter
                 (cliOption.getStrategy());
         SootJarFileInstrumenter jarFileInstrumenter = new
@@ -108,6 +123,10 @@ public class CostInstrument {
         }
         JarWriter jarWriter = new JarWriter(cliOption.getOutputFile(),
                 cliOption.getOutputJavaVersion(), outputManifest);
-        jarWriter.writeJars(cliOption.getInputFiles());
+        List<String> outputPaths =
+                cliOption.isExcludeCostJar() ?
+                        cliOption.getInputFiles() :
+                        SootUtil.getInputPaths(cliOption, costJar);
+        jarWriter.writeJars(outputPaths);
     }
 }
