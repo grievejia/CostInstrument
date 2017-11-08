@@ -102,6 +102,10 @@ public class CostInstrument {
             System.exit(0);
         }
         String costJar = extractCostJarToTempdir();
+        List<String> inputPaths =
+                cliOption.isExcludeCostJar() ?
+                        cliOption.getInputFiles() :
+                        SootUtil.getInputPaths(cliOption, costJar);
 
         // Instrumentation work starts here
         SootUtil.initialize(cliOption, costJar);
@@ -110,7 +114,7 @@ public class CostInstrument {
         SootJarFileInstrumenter jarFileInstrumenter = new
                 SootJarFileInstrumenter(new SootClassInstrumenter
                 (methodInstrumenter));
-        for (String jarFile : cliOption.getInputFiles())
+        for (String jarFile : inputPaths)
             jarFileInstrumenter.instrumentJarFile(jarFile);
 
         // Dump the result to the output jar
@@ -123,10 +127,6 @@ public class CostInstrument {
         }
         JarWriter jarWriter = new JarWriter(cliOption.getOutputFile(),
                 cliOption.getOutputJavaVersion(), outputManifest);
-        List<String> outputPaths =
-                cliOption.isExcludeCostJar() ?
-                        cliOption.getInputFiles() :
-                        SootUtil.getInputPaths(cliOption, costJar);
-        jarWriter.writeJars(outputPaths);
+        jarWriter.writeJars(inputPaths);
     }
 }
