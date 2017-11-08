@@ -41,7 +41,7 @@ public class CliOption {
             "in --output, and quit immediately. No instrumentation is performed.")
     private boolean extractCostJar = false;
 
-    @CommandLine.Option(names = {"-x", "--exclude-cost-in-output"}, description = "Prevent cost.jar from getting " +
+    @CommandLine.Option(names = {"-x", "--exclude-cost-from-output"}, description = "Prevent cost.jar from getting " +
             "included in the output jar.")
     private boolean excludeCostJar = false;
 
