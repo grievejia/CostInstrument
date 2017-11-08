@@ -43,8 +43,11 @@ public class SootUtil {
         sootOptions.set_prepend_classpath(true);
         sootOptions.set_allow_phantom_refs(true);
         sootOptions.set_full_resolver(true);
-        sootOptions.set_no_output_source_file_attribute(false);
-        sootOptions.set_write_local_annotations(true);
+        if (cliOption.isPreserveNames()) {
+            sootOptions.set_no_output_source_file_attribute(false);
+            sootOptions.set_write_local_annotations(true);
+            sootOptions.setPhaseOption("jb", "use-original-names");
+        }
 
         List<String> inputPaths = getInputPaths(cliOption, costJarPath);
         String sootClassPath = String.join(":", inputPaths);

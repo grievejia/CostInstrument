@@ -45,6 +45,10 @@ public class CliOption {
             "included in the output jar.")
     private boolean excludeCostJar = false;
 
+    @CommandLine.Option(names= {"-p", "--preserve-names"}, description = "Preserve debugging info such as variable " +
+            "names as much as possible. Note that this option only provides a best-effort guarantee.")
+    private boolean preserveNames = false;
+
     @CommandLine.Option(names = {"-h", "--help"}, usageHelp = true,
             description = "Displays this help message and quits.")
     private boolean helpRequested = false;
@@ -77,6 +81,10 @@ public class CliOption {
 
     public boolean isExtractCostJar() {
         return extractCostJar;
+    }
+
+    public boolean isPreserveNames() {
+        return preserveNames;
     }
 
     public boolean isHelpRequested() {
