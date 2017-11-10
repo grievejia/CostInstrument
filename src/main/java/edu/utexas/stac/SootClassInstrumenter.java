@@ -1,9 +1,11 @@
 package edu.utexas.stac;
 
-import soot.Scene;
 import soot.SootClass;
 import soot.SootMethod;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
 
 public class SootClassInstrumenter {
@@ -12,20 +14,27 @@ public class SootClassInstrumenter {
     private static Logger logger = Logger.getLogger(SootClassInstrumenter.class.getName());
 
     private SootMethodInstrumenter methodInstrumenter;
+    private Set<String> blacklistedClasses;
 
     public SootClassInstrumenter(SootMethodInstrumenter methodInstrumenter) {
+        this(methodInstrumenter, Collections.emptySet());
+    }
+    public SootClassInstrumenter(SootMethodInstrumenter methodInstrumenter, Set<String> blacklistedClasses) {
         this.methodInstrumenter = methodInstrumenter;
+        this.blacklistedClasses = blacklistedClasses;
     }
 
-    public void instrumentClass(String className) {
+    public void instrumentClass(SootClass sootClass) {
+        String className = sootClass.getName();
         logger.fine("Instrumenting class " + className);
-        SootClass clazz = Scene.v().getSootClass(className);
-        boolean isInstrumentClass = clazz.getName().startsWith(INSTRUMENT_CLASS_NAME);
 
-        for (SootMethod method: clazz.getMethods()) {
+        boolean isInstrumentClass = className.startsWith(INSTRUMENT_CLASS_NAME);
+        boolean isBlacklisted = blacklistedClasses.contains(className);
+
+        for (SootMethod method: sootClass.getMethods()) {
             if (method.isAbstract() || method.isNative())
                 continue;
-            if (isInstrumentClass) {
+            if (isInstrumentClass || isBlacklisted) {
                 // We still need to retrieve the active body since Soot won't serialize the body otherwise
                 method.retrieveActiveBody();
             } else {

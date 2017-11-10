@@ -8,7 +8,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 import java.util.logging.Level;
@@ -77,6 +79,13 @@ public class CostInstrument {
         }
     }
 
+    private static SootClassInstrumenter getClassInstrumentter(SootMethodInstrumenter methodInstrumenter, List<String>
+            blacklistedClassList) {
+        Set<String> blacklistedClassSet = new HashSet<>();
+        blacklistedClassSet.addAll(blacklistedClassList);
+        return new SootClassInstrumenter(methodInstrumenter, blacklistedClassSet);
+    }
+
     public static void main(String args[]) {
         // Read cmdline options
         CliOption cliOption = new CliOption();
@@ -111,9 +120,10 @@ public class CostInstrument {
         SootUtil.initialize(cliOption, costJar);
         SootMethodInstrumenter methodInstrumenter = getMethodInstrumenter
                 (cliOption.getStrategy());
+        SootClassInstrumenter classInstrumenter = getClassInstrumentter(methodInstrumenter, cliOption
+                .getBlacklistedClasses());
         SootJarFileInstrumenter jarFileInstrumenter = new
-                SootJarFileInstrumenter(new SootClassInstrumenter
-                (methodInstrumenter));
+                SootJarFileInstrumenter(classInstrumenter);
         for (String jarFile : inputPaths)
             jarFileInstrumenter.instrumentJarFile(jarFile);
 

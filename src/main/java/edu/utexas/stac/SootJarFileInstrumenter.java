@@ -1,5 +1,7 @@
 package edu.utexas.stac;
 
+import soot.Scene;
+import soot.SootClass;
 import soot.SourceLocator;
 
 import java.util.logging.Logger;
@@ -17,7 +19,8 @@ public class SootJarFileInstrumenter {
     public void instrumentJarFile(String jarFile) {
         logger.info("Processing jar file: " + jarFile);
         for (String cl : SourceLocator.v().getClassesUnder(jarFile)) {
-            classInstrumenter.instrumentClass(cl);
+            SootClass sootClass = Scene.v().getSootClass(cl);
+            classInstrumenter.instrumentClass(sootClass);
         }
         logger.info("Finished instrumenting jar file " + jarFile);
     }

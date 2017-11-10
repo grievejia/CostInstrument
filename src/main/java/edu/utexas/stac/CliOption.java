@@ -45,7 +45,7 @@ public class CliOption {
             "included in the output jar.")
     private boolean excludeCostJar = false;
 
-    @CommandLine.Option(names= {"-p", "--preserve-names"}, description = "Preserve debugging info such as variable " +
+    @CommandLine.Option(names = {"-p", "--preserve-names"}, description = "Preserve debugging info such as variable " +
             "names as much as possible. Note that this option only provides a best-effort guarantee.")
     private boolean preserveNames = false;
 
@@ -58,6 +58,10 @@ public class CliOption {
             "manifest file of the first input jar, if exists, will be copied " +
             "into this output jar.")
     private String output = "instrumented.jar";
+
+    @CommandLine.Option(names = {"--exclude-classes"}, split = ",", description = "Stop instrumenting the specified " +
+            "classes. Class names are separated by comma, and they must contain their package prefix.")
+    private List<String> blacklistedClasses = new ArrayList<>();
 
     public List<String> getInputFiles() {
         return Collections.unmodifiableList(inputFiles);
@@ -93,6 +97,10 @@ public class CliOption {
 
     public String getOutputFile() {
         return output;
+    }
+
+    public List<String> getBlacklistedClasses() {
+        return Collections.unmodifiableList(blacklistedClasses);
     }
 
     public void validate() {
