@@ -18,7 +18,7 @@ public class CliOption {
 
     @CommandLine.Parameters(arity = "1..*", paramLabel = "FILE", description
             = "Jar file(s) to process.")
-    private ArrayList<String> inputFiles;
+    private List<String> inputFiles;
 
     @CommandLine.Option(names = {"-l", "--log-level"}, description = "Specify" +
             " the log level: SILENT, DEFAULT, " + "VERBOSE, or ALL.")
@@ -107,5 +107,20 @@ public class CliOption {
         if (outputJavaVersion < 0 || outputJavaVersion > 8)
             throw new RuntimeException("Illegal output Java version: " +
                     outputJavaVersion);
+    }
+
+    // TODO: decouple cli options from instrumentation options
+    private String customCostJarLocation = null;
+    public String getCustomCostJarLocation() { return customCostJarLocation; }
+
+    public static CliOption create(List<String> inputFiles, String outputFile,
+                                   String customCostJarLocation) {
+        CliOption option = new CliOption();
+        option.inputFiles = inputFiles;
+        option.output = outputFile;
+        option.excludeCostJar = true;
+        option.logLevel = LogLevel.SILENT;
+        option.customCostJarLocation = customCostJarLocation;
+        return option;
     }
 }

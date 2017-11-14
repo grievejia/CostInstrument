@@ -79,11 +79,55 @@ public class CostInstrument {
         }
     }
 
-    private static SootClassInstrumenter getClassInstrumentter(SootMethodInstrumenter methodInstrumenter, List<String>
-            blacklistedClassList) {
+    private static SootClassInstrumenter getClassInstrumentter
+            (SootMethodInstrumenter methodInstrumenter, List<String>
+                    blacklistedClassList) {
         Set<String> blacklistedClassSet = new HashSet<>();
         blacklistedClassSet.addAll(blacklistedClassList);
-        return new SootClassInstrumenter(methodInstrumenter, blacklistedClassSet);
+        return new SootClassInstrumenter(methodInstrumenter,
+                blacklistedClassSet);
+    }
+
+    public static void runInstrument(CliOption cliOption) {
+        // Initialize logging facilities
+        initLogger(cliOption.getLogLevel());
+
+        // Extract cost.jar file
+        if (cliOption.isExtractCostJar()) {
+            if (cliOption.getCustomCostJarLocation() != null)
+                throw new RuntimeException("Cannot extract cost.jar from " +
+                        "custom location!");
+            extractCostJar(Paths.get(cliOption.getOutputFile()));
+            System.exit(0);
+        }
+        String customCostJar = cliOption.getCustomCostJarLocation();
+        String costJar = customCostJar == null ? extractCostJarToTempdir() :
+                customCostJar;
+        List<String> inputPaths = cliOption.isExcludeCostJar() ? cliOption
+                .getInputFiles() : SootUtil.getInputPaths(cliOption, costJar);
+
+        // Instrumentation work starts here
+        SootUtil.initialize(cliOption, costJar);
+        SootMethodInstrumenter methodInstrumenter = getMethodInstrumenter
+                (cliOption.getStrategy());
+        SootClassInstrumenter classInstrumenter = getClassInstrumentter
+                (methodInstrumenter, cliOption.getBlacklistedClasses());
+        SootJarFileInstrumenter jarFileInstrumenter = new
+                SootJarFileInstrumenter(classInstrumenter);
+        for (String jarFile : inputPaths)
+            jarFileInstrumenter.instrumentJarFile(jarFile);
+
+        // Dump the result to the output jar
+        Manifest outputManifest = null;
+        try {
+            outputManifest = new JarFile(cliOption.getInputFiles().get(0))
+                    .getManifest();
+        } catch (IOException e) {
+            // Try to carry on the work without the manifest
+        }
+        JarWriter jarWriter = new JarWriter(cliOption.getOutputFile(),
+                cliOption.getOutputJavaVersion(), outputManifest);
+        jarWriter.writeJars(inputPaths);
     }
 
     public static void main(String args[]) {
@@ -102,41 +146,6 @@ public class CostInstrument {
         }
         cliOption.validate();
 
-        // Initialize logging facilities
-        initLogger(cliOption.getLogLevel());
-
-        // Extract cost.jar file
-        if (cliOption.isExtractCostJar()) {
-            extractCostJar(Paths.get(cliOption.getOutputFile()));
-            System.exit(0);
-        }
-        String costJar = extractCostJarToTempdir();
-        List<String> inputPaths =
-                cliOption.isExcludeCostJar() ?
-                        cliOption.getInputFiles() :
-                        SootUtil.getInputPaths(cliOption, costJar);
-
-        // Instrumentation work starts here
-        SootUtil.initialize(cliOption, costJar);
-        SootMethodInstrumenter methodInstrumenter = getMethodInstrumenter
-                (cliOption.getStrategy());
-        SootClassInstrumenter classInstrumenter = getClassInstrumentter(methodInstrumenter, cliOption
-                .getBlacklistedClasses());
-        SootJarFileInstrumenter jarFileInstrumenter = new
-                SootJarFileInstrumenter(classInstrumenter);
-        for (String jarFile : inputPaths)
-            jarFileInstrumenter.instrumentJarFile(jarFile);
-
-        // Dump the result to the output jar
-        Manifest outputManifest = null;
-        try {
-            outputManifest = new JarFile(cliOption.getInputFiles().get(0))
-                    .getManifest();
-        } catch (IOException e) {
-            // Try to carry on the work without the manifest
-        }
-        JarWriter jarWriter = new JarWriter(cliOption.getOutputFile(),
-                cliOption.getOutputJavaVersion(), outputManifest);
-        jarWriter.writeJars(inputPaths);
+        runInstrument(cliOption);
     }
 }

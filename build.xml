@@ -1,19 +1,31 @@
-<project default="build">
-    <target name="buildutil" description="Build the util files used for instrumentation">
-        <mkdir dir="out/cost"/>
-        <javac includeantruntime="false" srcdir="cost" destdir="out/cost" debug="on">
+<project name="CostInstrument" basedir="." default="jar">
+
+    <property name="src.dir" value="src/main/java"/>
+    <property name="classes.dir" value="out/production"/>
+    <property name="cost.src.dir" value="cost"/>
+    <property name="cost.classes.dir" value="out/cost"/>
+    <property name="cost.jar.location" value="src/main/resource/cost.jar"/>
+
+    <target name="buildutil"
+            description="Build the util files used for instrumentation">
+        <mkdir dir="${cost.classes.dir}"/>
+        <javac includeantruntime="false" srcdir="${cost.src.dir}"
+               destdir="${cost.classes.dir}" debug="off">
         </javac>
     </target>
 
     <target name="jarutil" depends="buildutil"
             description="generate cost.jar">
-        <jar jarfile="src/main/resource/cost.jar" basedir="out/cost">
+        <jar jarfile="${cost.jar.location}" basedir="${cost.classes.dir}">
         </jar>
     </target>
 
     <target name="build">
         <mkdir dir="out/production"/>
-        <javac includeantruntime="false" srcdir="src/main/java" destdir="out/production" debug="on">
+        <javac includeantruntime="true"
+               srcdir="${src.dir}"
+               destdir="${classes.dir}"
+               debug="on">
             <classpath>
                 <pathelement location="lib/sootclasses-trunk-jar-with-dependencies.jar"/>
                 <pathelement location="lib/picocli-2.0.1.jar"/>
@@ -23,18 +35,29 @@
 
     <target name="jar" depends="build,jarutil"
             description="generate the distribution">
-        <jar jarfile="CostInstrument.jar" basedir="out/production">
-            <zipgroupfileset dir="lib" includes="*.jar"/>
-            <fileset file="src/main/resource/cost.jar"/>
+        <jar jarfile="${ant.project.name}.jar" basedir="${classes.dir}">
+            <zipgroupfileset dir="lib"
+                             includes="*.jar"
+                             excludes="ant-1.7.0.jar"/>
+            <fileset file="${cost.jar.location}"/>
             <manifest>
-                <attribute name="Main-Class" value="edu.utexas.stac.CostInstrument"/>
+                <attribute name="Main-Class"
+                           value="edu.utexas.stac.CostInstrument"/>
             </manifest>
         </jar>
     </target>
 
+    <target name="task.init"
+            description="Taskdef the ant task"
+            depends="jar">
+        <taskdef name="costinstr"
+                 classname="edu.utexas.stac.ant.InstrumentTask"
+                 classpath="${ant.project.name}.jar"/>
+    </target>
+
     <target name="clean">
-        <delete dir="out"/>
-        <delete file="CostInstrument.jar"/>
-        <delete file="src/main/resource/cost.jar"/>
+        <delete dir="out" failonerror="false"/>
+        <delete file="${ant.project.name}.jar"/>
+        <delete file="${cost.jar.location}"/>
     </target>
 </project>
