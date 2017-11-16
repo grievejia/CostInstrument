@@ -130,6 +130,9 @@ public class JarWriter {
             Enumeration<? extends ZipEntry> entries = zipFile.entries();
             while (entries.hasMoreElements()) {
                 ZipEntry entry = entries.nextElement();
+                if (entry.isDirectory())
+                    continue;
+
                 String fileName = entry.getName();
                 if (!fileName.endsWith(".class") && !fileName.startsWith("META-INF")) {
                     jarStream.putNextEntry(entry);
