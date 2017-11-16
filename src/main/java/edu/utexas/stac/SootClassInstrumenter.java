@@ -4,7 +4,6 @@ import soot.SootClass;
 import soot.SootMethod;
 
 import java.util.Collections;
-import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -30,6 +29,8 @@ public class SootClassInstrumenter {
 
         boolean isInstrumentClass = className.startsWith(INSTRUMENT_CLASS_NAME);
         boolean isBlacklisted = blacklistedClasses.contains(className);
+        if (isBlacklisted)
+            throw new RuntimeException("haha");
 
         for (SootMethod method: sootClass.getMethods()) {
             if (method.isAbstract() || method.isNative())

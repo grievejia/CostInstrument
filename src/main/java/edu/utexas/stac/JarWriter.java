@@ -9,9 +9,11 @@ import soot.options.Options;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.jar.Attributes;
 import java.util.jar.JarEntry;
@@ -19,6 +21,7 @@ import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 public class JarWriter {
 
@@ -108,6 +111,8 @@ public class JarWriter {
 
     private void writeClassesFromInput(JarOutputStream jarStream, String
             inputFile) throws IOException {
+
+        // First, dump all class files
         for (String cl : SourceLocator.v().getClassesUnder(inputFile)) {
             SootClass clazz = Scene.v().getSootClass(cl);
             String clazzFileName = getFileNameForClass(clazz);
@@ -118,6 +123,29 @@ public class JarWriter {
             new BafASMBackend(clazz, sootJavaVersion).generateClassFile
                     (jarStream);
             jarStream.closeEntry();
+        }
+
+        // Next, look for resource files and dump them as well
+        try (ZipFile zipFile = new ZipFile(inputFile)) {
+            Enumeration<? extends ZipEntry> entries = zipFile.entries();
+            while (entries.hasMoreElements()) {
+                ZipEntry entry = entries.nextElement();
+                String fileName = entry.getName();
+                if (!fileName.endsWith(".class") && !fileName.startsWith("META-INF")) {
+                    jarStream.putNextEntry(entry);
+                    writeResourceFromInput(jarStream, zipFile.getInputStream(entry));
+                    jarStream.closeEntry();
+                }
+            }
+        }
+    }
+
+    private static final int BUFFER_SIZE = 1024 * 10;
+    private void writeResourceFromInput(JarOutputStream outStream, InputStream inStream) throws IOException {
+        byte[] buffer = new byte[BUFFER_SIZE];
+        int len;
+        while ((len = inStream.read(buffer)) != -1) {
+            outStream.write(buffer, 0, len);
         }
     }
 }
