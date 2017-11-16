@@ -8,9 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 import java.util.logging.Level;
@@ -124,7 +122,7 @@ public class CostInstrument {
             // Try to carry on the work without the manifest
         }
         JarWriter jarWriter = new JarWriter(cliOption.getOutputFile(),
-                cliOption.getOutputJavaVersion(), outputManifest);
+                cliOption.getOutputJavaVersion(), outputManifest, cliOption.getBlacklistedClasses());
         jarWriter.writeJars(inputPaths);
     }
 

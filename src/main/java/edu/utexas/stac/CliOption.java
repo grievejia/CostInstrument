@@ -1,10 +1,12 @@
 package edu.utexas.stac;
 
+import edu.utexas.stac.ant.InstrumentTask;
 import picocli.CommandLine;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class CliOption {
 
@@ -60,7 +62,8 @@ public class CliOption {
     private String output = "instrumented.jar";
 
     @CommandLine.Option(names = {"--exclude-classes"}, split = ",", description = "Stop instrumenting the classes " +
-            "with specified patterns. Patterns are separated by comma.")
+            "with specified patterns. Patterns are separated by comma. This option is mainly used to get around bugs " +
+            "in Soot.")
     private List<String> blacklistedClasses = new ArrayList<>();
 
     public List<String> getInputFiles() {
@@ -113,11 +116,12 @@ public class CliOption {
     private String customCostJarLocation = null;
     public String getCustomCostJarLocation() { return customCostJarLocation; }
 
-    public static CliOption create(List<String> inputFiles, String outputFile,
-                                   String customCostJarLocation) {
+    public static CliOption createForAntTask(List<String> inputFiles, String outputFile,
+                                             String customCostJarLocation, List<InstrumentTask.Pattern> blacklist) {
         CliOption option = new CliOption();
         option.inputFiles = inputFiles;
         option.output = outputFile;
+        option.blacklistedClasses = blacklist.stream().map(p -> p.getPattern()).collect(Collectors.toList());
         option.excludeCostJar = true;
         option.logLevel = LogLevel.SILENT;
         option.customCostJarLocation = customCostJarLocation;

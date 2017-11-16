@@ -13,6 +13,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.jar.Attributes;
@@ -20,6 +21,8 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -30,6 +33,7 @@ public class JarWriter {
     private String outFileName;
     private Manifest manifest;
     private int sootJavaVersion;
+    private List<Pattern> blacklistedClassPatterns;
 
     private static int getSootJavaVersion(int javaVersion) {
         switch (javaVersion) {
@@ -68,14 +72,23 @@ public class JarWriter {
     private static String getFileNameForClass(SootClass sootClass) {
         return sootClass.getName().replace('.', '/') + ".class";
     }
+    private static String getClassNameForFile(String filePath) {
+        if (!filePath.endsWith(".class"))
+            throw new RuntimeException("Illegal class file name");
 
-    public JarWriter(String outFileName) {
-        this(outFileName, 0, null);
+        filePath = filePath.substring(0, filePath.length() - 6);  // Drop the .class suffix
+        return filePath.replace('/', '.');
     }
 
-    public JarWriter(String outFileName, int javaVersion, Manifest manifest) {
+    public JarWriter(String outFileName) {
+        this(outFileName, 0, null, Collections.emptyList());
+    }
+
+    public JarWriter(String outFileName, int javaVersion, Manifest manifest, List<String> blacklistedClassPatterns) {
         this.outFileName = outFileName;
         this.sootJavaVersion = getSootJavaVersion(javaVersion);
+        this.blacklistedClassPatterns = blacklistedClassPatterns.stream().map(s -> Pattern.compile(s)).collect
+                (Collectors.toList());
         if (manifest == null) {
             Manifest newManifest = new Manifest();
             newManifest.getMainAttributes().put(Attributes.Name
@@ -115,6 +128,11 @@ public class JarWriter {
         // First, dump all class files
         for (String cl : SourceLocator.v().getClassesUnder(inputFile)) {
             SootClass clazz = Scene.v().getSootClass(cl);
+
+            boolean isBlacklisted = SootClassInstrumenter.checkMatchPatterns(clazz.getName(), blacklistedClassPatterns);
+            if (isBlacklisted)
+                continue;
+
             String clazzFileName = getFileNameForClass(clazz);
             JarEntry entry = new JarEntry(clazzFileName);
             entry.setMethod(ZipEntry.DEFLATED);
@@ -134,7 +152,16 @@ public class JarWriter {
                     continue;
 
                 String fileName = entry.getName();
-                if (!fileName.endsWith(".class") && !fileName.startsWith("META-INF")) {
+
+                boolean isBlacklisted = fileName.endsWith(".class") && SootClassInstrumenter.checkMatchPatterns
+                        (getClassNameForFile(fileName), blacklistedClassPatterns);
+                if (isBlacklisted)
+                    logger.finer("Write blacklisted class file: " + fileName);
+                boolean isResource = !fileName.endsWith(".class") && !fileName.startsWith("META-INF");
+                if (isResource)
+                    logger.finer("Write resource file: " + fileName);
+
+                if (isBlacklisted || isResource) {
                     jarStream.putNextEntry(entry);
                     writeResourceFromInput(jarStream, zipFile.getInputStream(entry));
                     jarStream.closeEntry();

@@ -32,8 +32,7 @@ public class SootClassInstrumenter {
         logger.fine("Instrumenting class " + className);
 
         boolean isInstrumentClass = className.startsWith(INSTRUMENT_CLASS_NAME);
-        boolean isBlacklisted = blacklistedClassPatterns.stream().anyMatch(pattern -> pattern.matcher(className)
-                .matches());
+        boolean isBlacklisted = checkMatchPatterns(className, blacklistedClassPatterns);
         if (isBlacklisted)
             logger.finer("Skipped instrumentation due to blacklist: " + className);
 
@@ -49,5 +48,10 @@ public class SootClassInstrumenter {
                 method.getActiveBody().validate();
             }
         }
+    }
+
+    public static boolean checkMatchPatterns(String className, List<Pattern> patterns) {
+        return patterns.stream().anyMatch(pattern -> pattern.matcher(className)
+                .matches());
     }
 }
