@@ -4,8 +4,10 @@ import soot.SootClass;
 import soot.SootMethod;
 
 import java.util.Collections;
-import java.util.Set;
+import java.util.List;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class SootClassInstrumenter {
 
@@ -13,14 +15,16 @@ public class SootClassInstrumenter {
     private static Logger logger = Logger.getLogger(SootClassInstrumenter.class.getName());
 
     private SootMethodInstrumenter methodInstrumenter;
-    private Set<String> blacklistedClasses;
+    private List<Pattern> blacklistedClassPatterns;
 
     public SootClassInstrumenter(SootMethodInstrumenter methodInstrumenter) {
-        this(methodInstrumenter, Collections.emptySet());
+        this(methodInstrumenter, Collections.emptyList());
     }
-    public SootClassInstrumenter(SootMethodInstrumenter methodInstrumenter, Set<String> blacklistedClasses) {
+
+    public SootClassInstrumenter(SootMethodInstrumenter methodInstrumenter, List<String> blacklistedClassPatterns) {
         this.methodInstrumenter = methodInstrumenter;
-        this.blacklistedClasses = blacklistedClasses;
+        this.blacklistedClassPatterns = blacklistedClassPatterns.stream().map(s -> Pattern.compile(s)).collect
+                (Collectors.toList());
     }
 
     public void instrumentClass(SootClass sootClass) {
@@ -28,11 +32,12 @@ public class SootClassInstrumenter {
         logger.fine("Instrumenting class " + className);
 
         boolean isInstrumentClass = className.startsWith(INSTRUMENT_CLASS_NAME);
-        boolean isBlacklisted = blacklistedClasses.contains(className);
+        boolean isBlacklisted = blacklistedClassPatterns.stream().anyMatch(pattern -> pattern.matcher(className)
+                .matches());
         if (isBlacklisted)
-            throw new RuntimeException("haha");
+            logger.finer("Skipped instrumentation due to blacklist: " + className);
 
-        for (SootMethod method: sootClass.getMethods()) {
+        for (SootMethod method : sootClass.getMethods()) {
             if (method.isAbstract() || method.isNative())
                 continue;
             if (isInstrumentClass || isBlacklisted) {

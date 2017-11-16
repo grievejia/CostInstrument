@@ -82,10 +82,8 @@ public class CostInstrument {
     private static SootClassInstrumenter getClassInstrumentter
             (SootMethodInstrumenter methodInstrumenter, List<String>
                     blacklistedClassList) {
-        Set<String> blacklistedClassSet = new HashSet<>();
-        blacklistedClassSet.addAll(blacklistedClassList);
         return new SootClassInstrumenter(methodInstrumenter,
-                blacklistedClassSet);
+                blacklistedClassList);
     }
 
     public static void runInstrument(CliOption cliOption) {

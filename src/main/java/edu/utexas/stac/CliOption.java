@@ -59,8 +59,8 @@ public class CliOption {
             "into this output jar.")
     private String output = "instrumented.jar";
 
-    @CommandLine.Option(names = {"--exclude-classes"}, split = ",", description = "Stop instrumenting the specified " +
-            "classes. Class names are separated by comma, and they must contain their package prefix.")
+    @CommandLine.Option(names = {"--exclude-classes"}, split = ",", description = "Stop instrumenting the classes " +
+            "with specified patterns. Patterns are separated by comma.")
     private List<String> blacklistedClasses = new ArrayList<>();
 
     public List<String> getInputFiles() {
