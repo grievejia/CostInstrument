@@ -125,6 +125,7 @@ public class CliOption {
         option.excludeCostJar = true;
         option.logLevel = LogLevel.SILENT;
         option.customCostJarLocation = customCostJarLocation;
+        option.outputJavaVersion = 8;
         return option;
     }
 }
