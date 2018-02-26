@@ -117,15 +117,17 @@ public class CliOption {
     public String getCustomCostJarLocation() { return customCostJarLocation; }
 
     public static CliOption createForAntTask(List<String> inputFiles, String outputFile,
-                                             String customCostJarLocation, List<InstrumentTask.Pattern> blacklist) {
+                                             String customCostJarLocation, List<InstrumentTask.Pattern> blacklist,
+                                             boolean fullMode) {
         CliOption option = new CliOption();
         option.inputFiles = inputFiles;
         option.output = outputFile;
-        option.blacklistedClasses = blacklist.stream().map(p -> p.getPattern()).collect(Collectors.toList());
+        option.blacklistedClasses = blacklist.stream().map(InstrumentTask.Pattern::getPattern).collect(Collectors.toList());
         option.excludeCostJar = true;
         option.logLevel = LogLevel.SILENT;
         option.customCostJarLocation = customCostJarLocation;
         option.outputJavaVersion = 8;
+        option.strategy = fullMode ? Strategy.HEAVY : Strategy.LIGHT;
         return option;
     }
 }

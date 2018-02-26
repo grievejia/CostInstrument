@@ -14,6 +14,7 @@ public class InstrumentTask extends Task {
     private String input = null;
     private String output = null;
     private String costJar = null;
+    private boolean fullMode = false;
 
     public static class Pattern {
         public Pattern() {}
@@ -36,6 +37,8 @@ public class InstrumentTask extends Task {
         this.costJar = costJar;
     }
 
+    public void setFullMode(boolean b) { fullMode = b; }
+
     public Pattern createBlacklist() {
         Pattern pattern = new Pattern();
         blacklist.add(pattern);
@@ -48,7 +51,7 @@ public class InstrumentTask extends Task {
                     "for instrumentation task");
         }
         String logMsg = String.format("CostInstrument input = %s, output = " +
-                "%s, costjar = %s", input, output, costJar);
+                "%s, costjar = %s, fullMode = %b", input, output, costJar, fullMode);
         log(logMsg);
         if (!blacklist.isEmpty()) {
             for (Pattern p: blacklist)
@@ -56,7 +59,7 @@ public class InstrumentTask extends Task {
         }
 
         CliOption option = CliOption.createForAntTask(Collections.singletonList
-                (input), output, costJar, blacklist);
+                (input), output, costJar, blacklist, fullMode);
         CostInstrument.runInstrument(option);
     }
 }
